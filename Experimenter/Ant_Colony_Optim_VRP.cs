@@ -95,7 +95,7 @@ namespace Experimenter
 
 				BestInitial = bestLength;
 					 
-				double[][]  pheromones = InitPheromones(numAnts);
+				double[][]  pheromones = InitPheromones(numAnts, numCities);
 
 				int time = 0;
 
@@ -268,10 +268,10 @@ namespace Experimenter
 				int tmp = trail[r]; trail[r] = trail[i]; trail[i] = tmp;
 			}
 
-			int idx = IndexOfTarget(trail, start); // put start at [0]
-			int temp = trail[0];
-			trail[0] = trail[idx];
-			trail[idx] = temp;
+			//int idx = IndexOfTarget(trail, start); // put start at [0]
+			//int temp = trail[0];
+			//trail[0] = trail[idx];
+			//trail[idx] = temp;
 
 			return trail;
 		}
@@ -442,14 +442,14 @@ namespace Experimenter
 
 		// --------------------------------------------------------------------------------------------
 
-		 double[][] InitPheromones(int numCities)
+		 double[][] InitPheromones(int numAnts, int numCities)
 		 {
-			 double[][] pheromones = new double[numCities][];
-			 for (int i = 0; i < numCities; ++i)
-				 pheromones[i] = new double[numCities];
+			 double[][] pheromones = new double[numAnts][];
+			 for (int i = 0; i < numAnts; ++i)
+				 pheromones[i] = new double[numCities-1];
 			 for (int i = 0; i < pheromones.Length; ++i)
 				 for (int j = 0; j < pheromones[i].Length; ++j)
-					 pheromones[i][j] = 0.01; // otherwise first call to UpdateAnts -> BuiuldTrail -> NextNode -> MoveProbs => all 0.0 => throws
+					 pheromones[i][j] = 0.0001; // otherwise first call to UpdateAnts -> BuiuldTrail -> NextNode -> MoveProbs => all 0.0 => throws
 			 return pheromones;
 		 }
 
@@ -457,7 +457,7 @@ namespace Experimenter
 
 		 void UpdateAnts(int[][] ants, double[][] pheromones, double[][] dists)
 		 {
-			 int numCities_ = pheromones.Length;
+			 int numCities_ = pheromones[0].Length ;
 			 for (int k = 0; k < ants.Length; ++k)
 			 {
 				 int start = random.Next(1, numCities_);
@@ -469,7 +469,7 @@ namespace Experimenter
 
 		 int[] BuildTrail(int k, int start, double[][] pheromones, double[][] dists)
 		 {
-			 int numCities_ = pheromones.Length;
+			 int numCities_ = pheromones[0].Length;
 			 int[] trail = new int[numCities_];
 			 bool[] visited = new bool[numCities_];
 			 trail[0] = start;
@@ -504,7 +504,7 @@ namespace Experimenter
 		 double[] MoveProbs(int k, int cityX, bool[] visited, double[][] pheromones, double[][] dists)
 		 {
 			 // for ant k, located at nodeX, with visited[], return the prob of moving to each city
-			 int numCities_ = pheromones.Length;
+			 int numCities_ = pheromones[0].Length;
 			 double[] taueta = new double[numCities_]; // inclues cityX and visited cities
 			 double sum = 0.0; // sum of all tauetas
 			 for (int i = 0; i < taueta.Length; ++i) // i is the adjacent city
@@ -516,8 +516,8 @@ namespace Experimenter
 				 else
 				 {
 					 taueta[i] = Math.Pow(pheromones[cityX][i], alpha) * Math.Pow((1.0 / distance(cityX, i, dists)), beta); // could be huge when pheromone[][] is big
-					 if (taueta[i] < 0.0001)
-						 taueta[i] = 0.0001;
+					 if (taueta[i] < 0.00001)
+						 taueta[i] = 0.00001;
 					 else if (taueta[i] > (double.MaxValue / (numCities_ * 100)))
 						 taueta[i] = double.MaxValue / (numCities_ * 100);
 				 }
@@ -541,16 +541,16 @@ namespace Experimenter
 					 for (int k = 0; k < ants.Length; ++k)
 					 {
 						 double length = Length(ants[k], demand, Rawdists); // length of ant k trail
-						 double decrease = (1.0 - rho) * pheromones[i][j];
+						 double decrease = (1.0 - rho) * pheromones[i][j]  ;
 						 double increase = 0.0;
-						 if (EdgeInTrail(i + 1, j + 1, ants[k]) == true) increase = (Q / length);
+						 if (EdgeInTrail(i + 1, j + 1, ants[k]) == true) increase =  Q / length;
 
-						 pheromones[i][j] = decrease + increase;
+						 pheromones[i][j] =  decrease + 2000000* increase;
 
-						 if (pheromones[i][j] < 0.0001)
-							 pheromones[i][j] = 0.0001;
-						 else if (pheromones[i][j] > 100000.0)
-							 pheromones[i][j] = 100000.0;
+						 if (pheromones[i][j] < 0.00001)
+							 pheromones[i][j] = 0.00001;
+						 else if (pheromones[i][j] > 1000.0)
+							 pheromones[i][j] = 1000.0;
 
 						 pheromones[j][i] = pheromones[i][j];
 					 }
